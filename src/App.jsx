@@ -1,29 +1,37 @@
-import { useRef, useState } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect, useRef, useState } from 'react';
 import './index.css';
-import { Form } from 'react-bootstrap';
+import { Button, Form } from 'react-bootstrap';
 import axios from 'axios';
 const API_URL = 'https://api.unsplash.com/search/photos';
 const IMAGES_PER_PAGE = 20;
 const App = () => {
   const [images, setImages] = useState();
   const [totalPages, setTotalPages] = useState();
+  const [page, setPage] = useState(1);
 
   const searchInput = useRef(null);
+  
+  const resetSearch = () => {
+    setImages();
+    setPage(1);
+  };
   const handleSearch = (event) => {
     event.preventDefault();
     console.log(searchInput.current.value);
-    fetchImages();
+    resetSearch();
   };
   const handleSelection = (selection) => {
     searchInput.current.value = selection;
-    fetchImages();
+    resetSearch();
   };
+  console.log('page', page);
   const fetchImages = async () => {
     try {
       const { data } = await axios.get(
         `${API_URL}?query=${
           searchInput.current.value
-        }&page=1&per_page=${IMAGES_PER_PAGE}&client_id=${
+        }&page=${page}&per_page=${IMAGES_PER_PAGE}&client_id=${
           import.meta.env.VITE_API_KEY
         }`,
       );
@@ -34,6 +42,9 @@ const App = () => {
       console.log(error);
     }
   };
+  useEffect(() => {
+    fetchImages();
+  }, [page]);
   return (
     <div className="container">
       <h1 className="title">image search</h1>
@@ -62,6 +73,14 @@ const App = () => {
             className="image"
           />
         ))}
+      </div>
+      <div className="buttons">
+        {page > 1 && (
+          <Button onClick={() => setPage(page - 1)}>Previous</Button>
+        )}
+        {page < totalPages && (
+          <Button onClick={() => setPage(page + 1)}>Next</Button>
+        )}
       </div>
     </div>
   );
